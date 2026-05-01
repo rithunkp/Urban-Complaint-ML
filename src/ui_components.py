@@ -101,40 +101,15 @@ APP_CSS = """
     opacity: 1 !important;
 }
 
-.gradio-container .prose,
-.gradio-container .prose p,
-.gradio-container .prose li,
-.gradio-container .prose span,
-.gradio-container .prose strong,
-.gradio-container .prose code,
-.gradio-container .table-wrap,
-.gradio-container .table-wrap table,
-.gradio-container .table-wrap th,
+.gradio-container .table-wrap th {
+    color: var(--ink-accent) !important;
+    opacity: 1 !important;
+}
+
 .gradio-container .table-wrap td,
-.gradio-container .dataframe,
-.gradio-container .dataframe *,
-.gradio-container input,
-.gradio-container textarea,
-.gradio-container select {
-    color: var(--ink-strong) !important;
+.gradio-container .dataframe tbody td {
+    color: #f7f3ec !important;
     opacity: 1 !important;
-}
-
-.gradio-container input::placeholder,
-.gradio-container textarea::placeholder {
-    color: var(--ink-soft) !important;
-    opacity: 1 !important;
-}
-
-.gradio-container .tab-nav button,
-.gradio-container button[role="tab"] {
-    color: #f5f2ec !important;
-    opacity: 1 !important;
-}
-
-.gradio-container .tab-nav button.selected,
-.gradio-container button[role="tab"][aria-selected="true"] {
-    color: #ff7f50 !important;
 }
 """
 
