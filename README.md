@@ -1,3 +1,13 @@
+---
+title: UrbanComplaintML
+emoji: 🏙️
+colorFrom: blue
+colorTo: green
+sdk: gradio
+app_file: app.py
+pinned: false
+---
+
 # Kerala Urban Complaint Analysis for Smart City Resource Optimization
 
 This project delivers a Kerala-first civic operations product with a Hugging Face interface that:
