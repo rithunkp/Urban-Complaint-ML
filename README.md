@@ -195,6 +195,13 @@ import kagglehub
 path = kagglehub.dataset_download("new-york-city/ny-311-service-requests")
 ```
 
+## Results
+
+- NYC backbone performance reaches **0.989 accuracy**, **0.992 macro F1**, and **1.000 top-3 accuracy** on the retained class set.
+- Kerala transfer evaluation covers **50,000** generated rows with **70.3% reference-label coverage**.
+- The decision layer combines complaint load, growth, anomaly pressure, and closure delay into an explainable allocation formula.
+- The app now includes a scenario simulator so users can test how demand shocks shift recommended sector allocation.
+
 ## Status
 
 This repo is suitable for:
