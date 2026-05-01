@@ -16,9 +16,18 @@ PLOT_LAYOUT = dict(
 )
 
 APP_CSS = """
+:root {
+    --panel-bg: #fffdf8;
+    --panel-border: #e0d4c3;
+    --ink-strong: #173042;
+    --ink-accent: #0b4f6c;
+    --ink-muted: #4c5d69;
+    --ink-soft: #667785;
+}
+
 #hero-card {
     background: linear-gradient(135deg, #fffdf8 0%, #f7efe1 100%);
-    border: 1px solid #e0d4c3;
+    border: 1px solid var(--panel-border);
     border-radius: 28px;
     padding: 24px 28px;
     margin-bottom: 16px;
@@ -40,33 +49,35 @@ APP_CSS = """
     gap: 12px;
 }
 .kpi-card {
-    background: #fffdf8;
-    border: 1px solid #e0d4c3;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
     border-radius: 20px;
     padding: 14px 16px;
 }
 .kpi-label {
     font-size: 0.78rem;
     text-transform: uppercase;
-    color: #667785;
+    color: var(--ink-soft) !important;
     letter-spacing: 0.08em;
+    opacity: 1 !important;
 }
 .kpi-value {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #0b4f6c;
+    color: var(--ink-accent) !important;
     margin-top: 6px;
+    opacity: 1 !important;
 }
 .section-note {
-    background: #fffdf8;
-    border: 1px solid #e0d4c3;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
     border-radius: 18px;
     padding: 14px 16px;
-    color: #41515d;
+    color: var(--ink-muted);
 }
 .section-note,
 .section-note * {
-    color: #173042 !important;
+    color: var(--ink-strong) !important;
     opacity: 1 !important;
 }
 .section-note p,
@@ -74,7 +85,7 @@ APP_CSS = """
 .section-note span,
 .section-note strong,
 .section-note code {
-    color: #173042 !important;
+    color: var(--ink-strong) !important;
 }
 .section-note ul,
 .section-note ol {
@@ -82,6 +93,23 @@ APP_CSS = """
 }
 .section-note li::marker {
     color: #7a5a2f !important;
+}
+
+.kpi-card,
+.kpi-card * {
+    color: var(--ink-strong) !important;
+    opacity: 1 !important;
+}
+
+.gradio-container .table-wrap th {
+    color: var(--ink-accent) !important;
+    opacity: 1 !important;
+}
+
+.gradio-container .table-wrap td,
+.gradio-container .dataframe tbody td {
+    color: #f7f3ec !important;
+    opacity: 1 !important;
 }
 """
 

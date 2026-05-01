@@ -1,0 +1,153 @@
+{
+  "accuracy": 0.9887916666666666,
+  "macro_precision": 0.9948501201794416,
+  "macro_recall": 0.9889367853601184,
+  "macro_f1": 0.9916678340365029,
+  "top_3_accuracy": 1.0,
+  "train_rows": 96000,
+  "test_rows": 24000,
+  "class_count": 18,
+  "classes": [
+    "Abandoned Vehicle",
+    "Blocked Driveway",
+    "Derelict Vehicles",
+    "For Hire Vehicle Complaint",
+    "General Construction/Plumbing",
+    "HEAT/HOT WATER",
+    "Illegal Parking",
+    "Noise",
+    "Noise - Commercial",
+    "Noise - Residential",
+    "Noise - Street/Sidewalk",
+    "Noise - Vehicle",
+    "Rodent",
+    "Sidewalk Condition",
+    "Street Condition",
+    "Street Light Condition",
+    "UNSANITARY CONDITION",
+    "Water System"
+  ],
+  "classification_report": {
+    "Abandoned Vehicle": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 730.0
+    },
+    "Blocked Driveway": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2587.0
+    },
+    "Derelict Vehicles": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 582.0
+    },
+    "For Hire Vehicle Complaint": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1183.0
+    },
+    "General Construction/Plumbing": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 743.0
+    },
+    "HEAT/HOT WATER": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1602.0
+    },
+    "Illegal Parking": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 3766.0
+    },
+    "Noise": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 749.0
+    },
+    "Noise - Commercial": {
+      "precision": 1.0,
+      "recall": 0.8995633187772926,
+      "f1-score": 0.9471264367816092,
+      "support": 687.0
+    },
+    "Noise - Residential": {
+      "precision": 0.9429547844374343,
+      "recall": 0.9908839779005525,
+      "f1-score": 0.9663254310344828,
+      "support": 3620.0
+    },
+    "Noise - Street/Sidewalk": {
+      "precision": 0.9824912456228114,
+      "recall": 0.9277279168634861,
+      "f1-score": 0.9543245869776482,
+      "support": 2117.0
+    },
+    "Noise - Vehicle": {
+      "precision": 0.996900826446281,
+      "recall": 1.0,
+      "f1-score": 0.9984480082772892,
+      "support": 965.0
+    },
+    "Rodent": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 590.0
+    },
+    "Sidewalk Condition": {
+      "precision": 0.994579945799458,
+      "recall": 0.9865591397849462,
+      "f1-score": 0.99055330634278,
+      "support": 744.0
+    },
+    "Street Condition": {
+      "precision": 0.9903753609239654,
+      "recall": 0.9961277831558567,
+      "f1-score": 0.9932432432432432,
+      "support": 1033.0
+    },
+    "Street Light Condition": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 796.0
+    },
+    "UNSANITARY CONDITION": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 684.0
+    },
+    "Water System": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 822.0
+    },
+    "accuracy": 0.9887916666666666,
+    "macro avg": {
+      "precision": 0.9948501201794416,
+      "recall": 0.9889367853601184,
+      "f1-score": 0.9916678340365029,
+      "support": 24000.0
+    },
+    "weighted avg": {
+      "precision": 0.9891443671532049,
+      "recall": 0.9887916666666666,
+      "f1-score": 0.9887322221342648,
+      "support": 24000.0
+    }
+  }
+}

@@ -1,6 +1,5 @@
 ---
 title: UrbanComplaintML
-emoji: 🏙️
 colorFrom: blue
 colorTo: green
 sdk: gradio
@@ -8,20 +7,29 @@ app_file: app.py
 pinned: false
 ---
 
-# Kerala Urban Complaint Analysis for Smart City Resource Optimization
+# Urban Complaint ML
 
-This project delivers a Kerala-first civic operations product with a Hugging Face interface that:
+Kerala-focused complaint analytics and resource planning on top of an NYC 311-trained complaint classification pipeline.
 
-- trains its complaint intelligence layer on the NYC 311 dataset,
-- uses a Kerala municipal operations dataset with roads as the dominant category,
-- evaluates the trained model on the Kerala dataset,
-- recommends a fair municipal resource splitup so no sector is neglected,
-- explains the whole flow in a simple analytics UI.
+The app is designed for municipal operations review. It combines:
 
-## What lives in the repo
+- complaint trend analysis
+- anomaly detection
+- explainable sector-level resource split recommendations
+- an interactive ML prediction demo
+- a filterable complaint explorer
+
+## Highlights
+
+- Kerala-first dashboard language and district-level analysis
+- NYC 311 used as the reference training backbone
+- explainable, rule-based resource allocation
+- Gradio UI for local demos and hosted app packaging
+
+## Repository Layout
 
 ```text
-CityML/
+Urban-Complaint-ML/
 |-- app.py
 |-- requirements.txt
 |-- scripts/
@@ -38,40 +46,38 @@ CityML/
 |   `-- ui_components.py
 |-- data/
 |   |-- raw/
-|   |   `-- 311-service-requests-from-2010-to-present.csv
 |   |-- cache/
 |   |-- processed/
 |   `-- artifacts/
 `-- reports/
 ```
 
-## Core idea
+## How It Works
 
-### Model backbone
-- Real data: NYC 311 service requests loaded from `data/raw` or via `kagglehub`.
-- The model is trained only on intake-time fields aligned with real inference usage.
-- NYC is the reference training source, not the public-facing product identity.
+### Training Backbone
 
-### Kerala operations domain
-- Kerala data is schema-aligned to the NYC training pipeline.
-- It covers all 14 Kerala districts.
-- Roads are the dominant complaint family, but other municipal sectors are also represented.
-- It includes seasonal and named anomaly periods:
-  - flood-like spike,
-  - landslide / road washout spike,
-  - water shortage spike.
+- The supervised classifier is trained on NYC 311 service request data.
+- The model uses intake-time fields only, so inference aligns with real complaint intake conditions.
+- The classifier output is mapped into user-facing municipal sector views.
 
-### Resource splitup
-Municipal resource allocation is rule-based and explainable:
+### Kerala Transfer Layer
+
+- A Kerala-oriented evaluation dataset is generated to mirror the production schema.
+- The Kerala view covers all 14 districts.
+- Roads are intentionally the dominant complaint family, while water, drainage, waste, lighting, and traffic remain represented.
+
+### Resource Split Logic
+
+The resource recommendation engine is fully explainable and currently weights:
 
 - 50% recent complaint share
 - 20% positive trend growth
 - 20% anomaly pressure
 - 10% closure-delay pressure
 
-Every sector gets a minimum 5% floor before the final distribution is renormalized to 100%.
+Each sector receives a minimum 5% floor before final renormalization.
 
-## Local setup
+## Quick Start
 
 ### 1. Create a virtual environment
 
@@ -95,92 +101,114 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Training and asset generation
+### 3. Generate runtime assets
 
-The Gradio app expects saved artifacts. Build them locally first.
-
-### Train the NYC model and save runtime assets
+The app expects prebuilt runtime files before launch.
 
 ```bash
 python scripts/train_nyc_model.py
-```
-
-This produces:
-
-- `data/processed/nyc_runtime.csv.gz`
-- `data/artifacts/complaint_model_bundle.joblib`
-- `reports/nyc_metrics.json`
-
-### Generate and evaluate the Kerala transfer dataset
-
-```bash
 python scripts/generate_kerala_transfer_set.py
 ```
 
-This produces:
+This produces the core files used by the UI:
 
+- `data/processed/nyc_runtime.csv.gz`
 - `data/processed/kerala_transfer.csv.gz`
 - `data/processed/kerala_transfer_evaluated.csv.gz`
+- `data/artifacts/complaint_model_bundle.joblib`
+- `reports/nyc_metrics.json`
 - `reports/kerala_transfer_metrics.json`
 
-## Launch the app
+### 4. Launch the app
 
 ```bash
 python app.py
 ```
 
-The app will refuse to fully boot if the processed runtime assets are missing, and it will tell you which script to run.
+If assets are missing, the app will stop at startup and show the required file paths.
 
-### Recommended deployment flow
+## App Sections
 
-1. Create a new Hugging Face Space.
-2. Choose **Gradio** as the SDK.
-3. Push this repository after generating the saved assets locally.
-4. Make sure the repo contains:
-   - `app.py`
-   - `requirements.txt`
-   - `data/processed/*.csv.gz`
-   - `data/artifacts/*.joblib`
-   - `reports/*.json`
+### Overview
 
-### Important runtime rule
+- KPI cards
+- complaint distribution
+- top complaint categories
+- timeline with anomaly markers
+- geospatial overview when coordinates are available
+- transfer-readiness summary
 
-The Space should not retrain the model. Training is local/offline. The Space only loads saved artifacts.
+### Resource Splitup
 
-## Kaggle dataset loading
+- current sector load
+- recommended allocation split
+- district-by-sector pressure matrix
+- explanation for the recommendation
 
-If the raw CSV is not already present in `data/raw`, the training script can use:
+### Prediction Demo
+
+- free-text complaint description input
+- predicted complaint type
+- predicted sector
+- top-confidence chart
+
+### Data Explorer
+
+- anomaly table
+- filtered complaint rows
+- downloadable CSV export
+
+## Data Notes
+
+- Raw NYC data may live in `data/raw/`.
+- Cached intermediate files may live in `data/cache/`.
+- Generated runtime assets belong in `data/processed/`, `data/artifacts/`, and `reports/`.
+- Large binary and compressed artifacts are intentionally excluded from normal Git workflows by default.
+
+## Deployment Guidance
+
+### Local-first workflow
+
+This repository is production-ready for local execution after runtime assets are generated.
+
+### Hosted deployment
+
+Hosted deployments need a deliberate artifact strategy because the app depends on generated `.csv.gz` and `.joblib` files at startup.
+
+Recommended options:
+
+- build the assets during image creation in a containerized deploy flow
+- load the artifacts from managed object storage
+- publish the artifacts with a large-file backend that your host fully supports
+
+### Important rule
+
+Do not retrain the model inside the request-serving app process. Training and artifact generation should remain offline or build-time steps.
+
+## Data Source Helper
+
+If the NYC source CSV is not already available locally, the training flow can use `kagglehub`:
 
 ```python
 import kagglehub
+
 path = kagglehub.dataset_download("new-york-city/ny-311-service-requests")
 ```
 
-## UI overview
+## Results
 
-The Gradio app contains these tabs:
+- NYC backbone performance reaches **0.989 accuracy**, **0.992 macro F1**, and **1.000 top-3 accuracy** on the retained class set.
+- Kerala transfer evaluation covers **50,000** generated rows with **70.3% reference-label coverage**.
+- The decision layer combines complaint load, growth, anomaly pressure, and closure delay into an explainable allocation formula.
+- The app now includes a scenario simulator so users can test how demand shocks shift recommended sector allocation.
 
-- `Overview`
-  - KPI cards
-  - model backbone and Kerala readiness summary
-  - complaint distribution
-  - top complaint types
-  - timeline with anomaly markers
-  - geospatial view when coordinates are available
+## Status
 
-- `Resource Splitup`
-  - current sector load
-  - recommended allocation pie chart
-  - district or borough vs sector matrix
-  - fairness explanation
+This repo is suitable for:
 
-- `ML Demo`
-  - free-text complaint prediction
-  - predicted complaint type
-  - predicted sector
-  - top confidence chart
+- local demos
+- analytics review
+- model behavior inspection
+- packaging into a more controlled production deployment
 
-- `Data Explorer`
-  - anomaly table
-  - filtered rows
-  - downloadable CSV
+Before a public hosted rollout, make sure artifact storage, startup behavior, and deployment infrastructure are finalized together.

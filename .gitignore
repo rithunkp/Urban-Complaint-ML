@@ -34,15 +34,6 @@ Thumbs.db
 .streamlit/
 
 # ML/data artifacts
-data/**
-!data/
-!data/**/
-!data/**/.gitkeep
-
-reports/**
-!reports/
-!reports/.gitkeep
-
 *.csv
 *.csv.gz
 *.tsv
@@ -58,3 +49,23 @@ reports/**
 *.onnx
 *.npy
 *.npz
+
+# Ignore local raw/cache data, but keep deployable runtime assets
+data/raw/
+data/cache/
+
+data/processed/**
+!data/processed/
+!data/processed/.gitkeep
+!data/processed/*.csv.gz
+
+data/artifacts/**
+!data/artifacts/
+!data/artifacts/.gitkeep
+!data/artifacts/*.joblib
+!data/artifacts/*.json
+
+reports/**
+!reports/
+!reports/.gitkeep
+!reports/*.json
