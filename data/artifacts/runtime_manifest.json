@@ -1,0 +1,12 @@
+{
+  "training_metadata": {
+    "source_file": "C:\\Rithun\\CityML\\data\\raw\\311-service-requests-from-2010-to-present.csv",
+    "rows_scanned": 1400000,
+    "sample_rows": 180000,
+    "chunks_processed": 7,
+    "cache_version": "v3"
+  },
+  "training_rows": 120000,
+  "processed_runtime_file": "data/processed/nyc_runtime.csv.gz",
+  "model_bundle": "C:\\Rithun\\Urban-Complaint-ML\\data\\artifacts\\complaint_model_bundle.joblib"
+}
