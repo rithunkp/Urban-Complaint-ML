@@ -1,0 +1,60 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments and local tooling
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs and local runtime files
+*.log
+
+# Streamlit local config
+.streamlit/
+
+# ML/data artifacts
+data/**
+!data/
+!data/**/
+!data/**/.gitkeep
+
+reports/**
+!reports/
+!reports/.gitkeep
+
+*.csv
+*.csv.gz
+*.tsv
+*.jsonl
+*.parquet
+*.feather
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.npy
+*.npz
