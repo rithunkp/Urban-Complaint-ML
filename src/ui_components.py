@@ -257,6 +257,86 @@ def build_resource_pie(allocation: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def build_simulation_figure(simulated: pd.DataFrame) -> go.Figure:
+    """Create the simulated municipal resource splitup chart."""
+    if simulated.empty or "recommended_pct" not in simulated.columns:
+        return empty_figure("Simulated Resource Splitup", "No simulated allocation data is available.")
+    ordered = simulated.sort_values("recommended_pct", ascending=True)
+    fig = go.Figure(
+        go.Bar(
+            x=ordered["recommended_pct"],
+            y=ordered["sector_display"],
+            orientation="h",
+            marker_color="#0b4f6c",
+            text=ordered["recommended_pct"].map(lambda value: f"{value:.1f}%"),
+            textposition="auto",
+            hovertemplate="%{y}<br>Simulated split: %{x:.2f}%<extra></extra>",
+        )
+    )
+    fig.update_layout(height=320, title="Simulated Resource Splitup", xaxis_title="Percent", yaxis_title="", **PLOT_LAYOUT)
+    return fig
+
+
+def build_simulation_table(default_allocation: pd.DataFrame, simulated: pd.DataFrame) -> pd.DataFrame:
+    """Build a side-by-side comparison of default and simulated allocation."""
+    columns = ["Sector", "Current Load %", "Current Recommended %", "Simulated Recommended %", "Change in Allocation"]
+    required = {"sector", "sector_display", "current_load_pct", "recommended_pct"}
+    if default_allocation.empty or simulated.empty or not required.issubset(default_allocation.columns) or not required.issubset(simulated.columns):
+        return pd.DataFrame(columns=columns)
+
+    default = default_allocation[["sector", "sector_display", "current_load_pct", "recommended_pct"]].rename(
+        columns={"recommended_pct": "default_recommended_pct"}
+    )
+    sim = simulated[["sector", "recommended_pct"]].rename(columns={"recommended_pct": "simulated_pct"})
+    comparison = default.merge(sim, on="sector", how="left")
+    comparison["simulated_pct"] = comparison["simulated_pct"].fillna(0.0)
+    comparison["delta_pp"] = (comparison["simulated_pct"] - comparison["default_recommended_pct"]).round(2)
+    readable = comparison.rename(
+        columns={
+            "sector_display": "Sector",
+            "current_load_pct": "Current Load %",
+            "default_recommended_pct": "Current Recommended %",
+            "simulated_pct": "Simulated Recommended %",
+            "delta_pp": "Change in Allocation",
+        }
+    )
+    return readable[columns].round(
+        {
+            "Current Load %": 2,
+            "Current Recommended %": 2,
+            "Simulated Recommended %": 2,
+            "Change in Allocation": 2,
+        }
+    )
+
+
+def build_simulation_explanation(comparison: pd.DataFrame, demand_changes: dict[str, float], floor_pct: float) -> str:
+    """Explain the largest movement caused by simple demand-change settings."""
+    if comparison.empty:
+        return "No simulation rows are available for the active filters."
+
+    increased = comparison.sort_values("Change in Allocation", ascending=False).iloc[0]
+    decreased = comparison.sort_values("Change in Allocation", ascending=True).iloc[0]
+    readable_changes = {
+        SECTOR_DISPLAY_NAMES.get(sector, sector): float(change)
+        for sector, change in demand_changes.items()
+    }
+    demand_up = max(readable_changes.items(), key=lambda item: item[1])
+    demand_down = min(readable_changes.items(), key=lambda item: item[1])
+    if all(abs(value) < 1e-9 for value in readable_changes.values()):
+        demand_sentence = "No complaint demand changes were applied, so the simulated split matches the current recommendation."
+    else:
+        demand_sentence = (
+            f"The biggest complaint increase is {demand_up[0]} at {demand_up[1]:+.0f}%, "
+            f"and the biggest decrease is {demand_down[0]} at {demand_down[1]:+.0f}%."
+        )
+    return (
+        f"{demand_sentence} The minimum guaranteed allocation is {floor_pct:.1f}% per sector. "
+        f"The largest allocation gain is {increased['Sector']} at {increased['Change in Allocation']:+.2f} percentage points; "
+        f"the largest allocation drop is {decreased['Sector']} at {decreased['Change in Allocation']:+.2f} percentage points."
+    )
+
+
 def build_region_sector_heatmap(matrix: pd.DataFrame, domain: str) -> go.Figure:
     """Create the region-by-sector heatmap."""
     if matrix.empty:

@@ -27,6 +27,7 @@ from src.domain import DOMAIN_KERALA, DOMAIN_NYC, localized_label_for_prediction
 from src.modeling import load_model_bundle, predict_request
 from src.paths import ARTIFACTS_DIR, PROCESSED_DIR, REPORTS_DIR
 from src.resource_allocation import build_resource_explanation, compute_resource_split
+from src.resource_allocation import compute_resource_split_with_demand_changes
 from src.ui_components import (
     APP_CSS,
     build_benchmark_figure,
@@ -38,6 +39,9 @@ from src.ui_components import (
     build_region_sector_heatmap,
     build_resource_pie,
     build_sector_figure,
+    build_simulation_explanation,
+    build_simulation_figure,
+    build_simulation_table,
     build_timeline_figure,
     build_top_categories_figure,
     build_transfer_confusion_matrix,
@@ -221,6 +225,53 @@ def update_dashboard(
     )
 
 
+def run_resource_simulation(
+    domain: str,
+    start_date: str,
+    end_date: str,
+    regions: list[str],
+    sectors: list[str],
+    complaint_types: list[str],
+    anomaly_threshold: float,
+    granularity: str,
+    roads_change: float,
+    drainage_change: float,
+    water_change: float,
+    waste_change: float,
+    lighting_change: float,
+    traffic_change: float,
+    safety_change: float,
+    simulation_floor_pct: float,
+) -> tuple[Any, pd.DataFrame, str]:
+    """Compute only the simulation outputs on demand."""
+    frame = dataset_for_domain(domain)
+    filtered = filter_dataset(frame, start_date, end_date, regions, sectors, complaint_types)
+    timeline = aggregate_time_series(filtered, granularity)
+    anomalies = detect_anomalies(timeline, granularity, anomaly_threshold)
+    default_allocation = compute_resource_split(filtered, anomalies)
+    demand_changes = {
+        "roads": roads_change,
+        "drainage_flooding": drainage_change,
+        "water_supply": water_change,
+        "waste_sanitation": waste_change,
+        "street_lighting": lighting_change,
+        "traffic_signals": traffic_change,
+        "public_safety_other": safety_change,
+    }
+    simulated = compute_resource_split_with_demand_changes(
+        filtered,
+        anomalies,
+        demand_changes=demand_changes,
+        floor_pct=simulation_floor_pct,
+    )
+    comparison = build_simulation_table(default_allocation, simulated)
+    return (
+        build_simulation_figure(simulated),
+        comparison,
+        build_simulation_explanation(comparison, demand_changes, simulation_floor_pct),
+    )
+
+
 def run_demo_prediction(domain: str, descriptor: str, location_type: str) -> tuple[str, str, str, Any]:
     """Run the ML demo and format its outputs for the UI."""
     bundle = load_runtime_assets()["bundle"]
@@ -301,6 +352,27 @@ def build_app() -> gr.Blocks:
                         benchmark_plot = gr.Plot()
                         benchmark_table = gr.Dataframe(label="Allocation benchmark", interactive=False)
 
+                    with gr.Tab("Simulation"):
+                        gr.Markdown(
+                            "Use this to test simple what-if scenarios, such as more road complaints after heavy rain "
+                            "or fewer lighting complaints after repairs."
+                        )
+                        with gr.Row():
+                            roads_change = gr.Slider(-50, 100, value=0, step=10, label="Roads complaints change")
+                            drainage_change = gr.Slider(-50, 100, value=0, step=10, label="Drainage & Flooding complaints change")
+                        with gr.Row():
+                            water_change = gr.Slider(-50, 100, value=0, step=10, label="Water Supply complaints change")
+                            waste_change = gr.Slider(-50, 100, value=0, step=10, label="Waste & Sanitation complaints change")
+                        with gr.Row():
+                            lighting_change = gr.Slider(-50, 100, value=0, step=10, label="Street Lighting complaints change")
+                            traffic_change = gr.Slider(-50, 100, value=0, step=10, label="Traffic & Parking complaints change")
+                        safety_change = gr.Slider(-50, 100, value=0, step=10, label="Public Safety & Other complaints change")
+                        simulation_floor_pct = gr.Slider(0, 14, value=5, step=1, label="Minimum sector floor (%)")
+                        simulation_button = gr.Button("Run simulation", variant="primary")
+                        simulation_plot = gr.Plot()
+                        simulation_table = gr.Dataframe(label="Default vs simulated split", interactive=False, wrap=False)
+                        simulation_explanation = gr.Markdown(elem_classes=["section-note"])
+
                     with gr.Tab("Prediction Demo"):
                         demo_descriptor = gr.Textbox(
                             label="Complaint description",
@@ -331,7 +403,16 @@ def build_app() -> gr.Blocks:
 
         refresh_button.click(
             fn=update_dashboard,
-            inputs=[domain, start_date, end_date, region_filter, sector_filter, type_filter, anomaly_threshold, granularity],
+            inputs=[
+                domain,
+                start_date,
+                end_date,
+                region_filter,
+                sector_filter,
+                type_filter,
+                anomaly_threshold,
+                granularity,
+            ],
             outputs=[
                 kpi_cards,
                 insights_box,
@@ -365,7 +446,16 @@ def build_app() -> gr.Blocks:
 
         demo.load(
             fn=update_dashboard,
-            inputs=[domain, start_date, end_date, region_filter, sector_filter, type_filter, anomaly_threshold, granularity],
+            inputs=[
+                domain,
+                start_date,
+                end_date,
+                region_filter,
+                sector_filter,
+                type_filter,
+                anomaly_threshold,
+                granularity,
+            ],
             outputs=[
                 kpi_cards,
                 insights_box,
@@ -389,6 +479,29 @@ def build_app() -> gr.Blocks:
                 benchmark_plot,
                 benchmark_table,
             ],
+        )
+
+        simulation_button.click(
+            fn=run_resource_simulation,
+            inputs=[
+                domain,
+                start_date,
+                end_date,
+                region_filter,
+                sector_filter,
+                type_filter,
+                anomaly_threshold,
+                granularity,
+                roads_change,
+                drainage_change,
+                water_change,
+                waste_change,
+                lighting_change,
+                traffic_change,
+                safety_change,
+                simulation_floor_pct,
+            ],
+            outputs=[simulation_plot, simulation_table, simulation_explanation],
         )
 
     return demo

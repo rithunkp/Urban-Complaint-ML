@@ -5,6 +5,14 @@ import pandas as pd
 
 from src.domain import SECTOR_DISPLAY_NAMES, SECTOR_ORDER
 
+DEFAULT_ALLOCATION_WEIGHTS = {
+    "recent": 50.0,
+    "growth": 20.0,
+    "anomaly": 20.0,
+    "closure": 10.0,
+}
+DEFAULT_FLOOR_PCT = 5.0
+
 
 def safe_normalize(series: pd.Series) -> pd.Series:
     """Normalize a non-negative series into the [0, 1] range safely."""
@@ -15,17 +23,38 @@ def safe_normalize(series: pd.Series) -> pd.Series:
     return filled / maximum
 
 
-def compute_resource_split(filtered: pd.DataFrame, anomaly_frame: pd.DataFrame) -> pd.DataFrame:
-    """Compute explainable sector-wise allocation with a minimum fairness floor."""
-    base = pd.DataFrame({"sector": SECTOR_ORDER})
-    if filtered.empty:
-        base["current_load_pct"] = 0.0
-        base["recommended_pct"] = round(100.0 / len(base), 2)
-        base["resource_score"] = 0.0
-        base["sector_display"] = base["sector"].map(SECTOR_DISPLAY_NAMES)
-        return base
+def _normalize_weights(weights: dict[str, float] | None) -> dict[str, float]:
+    """Normalize weight percentages into fractions with a safe all-zero fallback."""
+    source = DEFAULT_ALLOCATION_WEIGHTS if weights is None else weights
+    raw = {
+        "recent": max(float(source.get("recent", 0.0)), 0.0),
+        "growth": max(float(source.get("growth", 0.0)), 0.0),
+        "anomaly": max(float(source.get("anomaly", 0.0)), 0.0),
+        "closure": max(float(source.get("closure", 0.0)), 0.0),
+    }
+    total = sum(raw.values())
+    if total <= 0:
+        return {key: 0.0 for key in raw}
+    return {key: value / total for key, value in raw.items()}
 
-    total_rows = len(filtered)
+
+def _apply_floor(raw: pd.Series, floor_pct: float) -> pd.Series:
+    """Apply a sector floor to raw allocation fractions and normalize."""
+    aligned = raw.reindex(SECTOR_ORDER, fill_value=0.0).clip(lower=0.0)
+    total = aligned.sum()
+    if total <= 0:
+        aligned = pd.Series(1.0 / len(SECTOR_ORDER), index=SECTOR_ORDER)
+    else:
+        aligned = aligned / total
+
+    max_floor = 1.0 / len(SECTOR_ORDER)
+    floor = min(max(float(floor_pct), 0.0) / 100.0, max_floor)
+    adjusted = floor + (1.0 - floor * len(SECTOR_ORDER)) * aligned
+    return adjusted / max(adjusted.sum(), 1e-9)
+
+
+def _allocation_components(filtered: pd.DataFrame, anomaly_frame: pd.DataFrame) -> dict[str, pd.Series]:
+    """Compute all reusable sector pressure components."""
     current_share = filtered["sector"].value_counts(normalize=True).reindex(SECTOR_ORDER, fill_value=0.0)
 
     latest_date = filtered["created_at"].max()
@@ -58,28 +87,92 @@ def compute_resource_split(filtered: pd.DataFrame, anomaly_frame: pd.DataFrame) 
     recent_component = safe_normalize(recent_share)
     growth_component = safe_normalize(positive_growth)
     anomaly_component = safe_normalize(anomaly_pressure)
+    return {
+        "current_share": current_share,
+        "recent": recent_component,
+        "growth": growth_component,
+        "anomaly": anomaly_component,
+        "closure": closure_delay,
+    }
 
+
+def compute_resource_split_with_weights(
+    filtered: pd.DataFrame,
+    anomaly_frame: pd.DataFrame,
+    weights: dict[str, float] | None = None,
+    floor_pct: float = DEFAULT_FLOOR_PCT,
+) -> pd.DataFrame:
+    """Compute allocation using caller-provided pressure weights."""
+    base = pd.DataFrame({"sector": SECTOR_ORDER})
+    if filtered.empty:
+        base["current_load_pct"] = 0.0
+        base["recommended_pct"] = round(100.0 / len(base), 2)
+        base["resource_score"] = 0.0
+        base["recent_share_component"] = 0.0
+        base["growth_component"] = 0.0
+        base["anomaly_component"] = 0.0
+        base["closure_component"] = 0.0
+        base["sector_display"] = base["sector"].map(SECTOR_DISPLAY_NAMES)
+        return base
+
+    components = _allocation_components(filtered, anomaly_frame)
+    normalized_weights = _normalize_weights(weights)
     score = (
-        0.50 * recent_component
-        + 0.20 * growth_component
-        + 0.20 * anomaly_component
-        + 0.10 * closure_delay
+        normalized_weights["recent"] * components["recent"]
+        + normalized_weights["growth"] * components["growth"]
+        + normalized_weights["anomaly"] * components["anomaly"]
+        + normalized_weights["closure"] * components["closure"]
     )
+    adjusted = _apply_floor(score, floor_pct)
 
-    floor = 0.05
-    raw = score / max(score.sum(), 1e-9)
-    adjusted = floor + (1.0 - floor * len(SECTOR_ORDER)) * raw
-    adjusted = adjusted / adjusted.sum()
-
-    base["current_load_pct"] = (current_share.reindex(SECTOR_ORDER).fillna(0.0) * 100).round(2).to_numpy()
+    base["current_load_pct"] = (components["current_share"].reindex(SECTOR_ORDER).fillna(0.0) * 100).round(2).to_numpy()
     base["recommended_pct"] = (adjusted.reindex(SECTOR_ORDER).fillna(0.0) * 100).round(2).to_numpy()
     base["resource_score"] = score.reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
-    base["recent_share_component"] = recent_component.reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
-    base["growth_component"] = growth_component.reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
-    base["anomaly_component"] = anomaly_component.reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
-    base["closure_component"] = closure_delay.reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
+    base["recent_share_component"] = components["recent"].reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
+    base["growth_component"] = components["growth"].reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
+    base["anomaly_component"] = components["anomaly"].reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
+    base["closure_component"] = components["closure"].reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
     base["sector_display"] = base["sector"].map(SECTOR_DISPLAY_NAMES)
     return base
+
+
+def compute_resource_split_with_demand_changes(
+    filtered: pd.DataFrame,
+    anomaly_frame: pd.DataFrame,
+    demand_changes: dict[str, float] | None = None,
+    floor_pct: float = DEFAULT_FLOOR_PCT,
+) -> pd.DataFrame:
+    """Compute allocation after applying simple sector-level demand changes."""
+    default = compute_resource_split(filtered, anomaly_frame)
+    if filtered.empty:
+        return compute_resource_split_with_weights(filtered, anomaly_frame, floor_pct=floor_pct)
+
+    changes = demand_changes or {}
+    multipliers = pd.Series(
+        {
+            sector: max(0.0, 1.0 + float(changes.get(sector, 0.0)) / 100.0)
+            for sector in SECTOR_ORDER
+        },
+        dtype=float,
+    )
+    default_scores = default.set_index("sector")["resource_score"].reindex(SECTOR_ORDER, fill_value=0.0)
+    adjusted_scores = default_scores * multipliers
+    adjusted = _apply_floor(adjusted_scores, floor_pct)
+
+    simulated = default.copy()
+    simulated["recommended_pct"] = (adjusted.reindex(SECTOR_ORDER).fillna(0.0) * 100).round(2).to_numpy()
+    simulated["resource_score"] = adjusted_scores.reindex(SECTOR_ORDER).fillna(0.0).round(4).to_numpy()
+    return simulated
+
+
+def compute_resource_split(filtered: pd.DataFrame, anomaly_frame: pd.DataFrame) -> pd.DataFrame:
+    """Compute explainable sector-wise allocation with a minimum fairness floor."""
+    return compute_resource_split_with_weights(
+        filtered,
+        anomaly_frame,
+        weights=DEFAULT_ALLOCATION_WEIGHTS,
+        floor_pct=DEFAULT_FLOOR_PCT,
+    )
 
 
 def build_resource_explanation(allocation: pd.DataFrame) -> str:

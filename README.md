@@ -145,6 +145,25 @@ If assets are missing, the app will stop at startup and show the required file p
 - district-by-sector pressure matrix
 - explanation for the recommendation
 
+### Diagnostics
+
+- NYC vs Kerala evaluation metrics table
+- Kerala transfer confusion matrix
+- prediction confidence distribution
+- district-level transfer accuracy
+
+### Benchmark
+
+- equal split vs count-only vs 4-factor model comparison
+- sector-level benchmark chart
+- percentage-point delta table
+
+### Simulation
+
+- simple sector-level complaint demand changes from -50% to +100%
+- adjustable minimum guaranteed allocation per sector
+- default-vs-simulated allocation comparison with plain-language explanation
+
 ### Prediction Demo
 
 - free-text complaint description input
@@ -200,7 +219,7 @@ path = kagglehub.dataset_download("new-york-city/ny-311-service-requests")
 - NYC backbone performance reaches **0.989 accuracy**, **0.992 macro F1**, and **1.000 top-3 accuracy** on the retained class set.
 - Kerala transfer evaluation covers **50,000** generated rows with **100.0% reference-label coverage**, **0.889 accuracy**, **0.709 macro F1**, and **0.961 top-3 accuracy** against the synthetic reference labels.
 - The decision layer combines complaint load, growth, anomaly pressure, and closure delay into an explainable allocation formula.
-- The app now includes a scenario simulator so users can test how demand shocks shift recommended sector allocation.
+- The app includes diagnostics, allocation benchmarks, and a scenario simulator for testing how sector complaint increases or decreases shift recommended allocation.
 
 ## Status
 

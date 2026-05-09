@@ -308,6 +308,8 @@ The allocation formula in `src/resource_allocation.py` combines:
 
 There is a 5% fairness floor per sector before normalization.
 
+The Simulation tab keeps this logic understandable for non-technical users. Instead of asking users to tune model weights, it lets them adjust expected complaint demand by sector from -50% to +100% and then compares the current recommended split against the simulated split. This supports simple questions such as "what if road complaints increase after heavy rain?" or "what if lighting complaints drop after repairs?"
+
 This part of the project is especially suitable for Claude-assisted ideation because you can ask for:
 
 - alternative weighting strategies
@@ -341,6 +343,9 @@ The current app exposes:
 
 - Overview
 - Resource Splitup
+- Diagnostics
+- Benchmark
+- Simulation
 - Prediction Demo
 - Data Explorer
 
@@ -350,6 +355,7 @@ The app loads:
 - `kerala_transfer_evaluated.csv.gz`
 - `complaint_model_bundle.joblib`
 - `nyc_metrics.json`
+- `kerala_transfer_metrics.json`
 
 If these files are missing, the app stops at startup and asks the user to run the training and generation scripts first.
 
@@ -741,7 +747,7 @@ That gives you both technical value and material you can directly use in a proje
 - replace synthetic Kerala data with real municipality complaint records
 - add formal feature-ablation notebooks
 - evaluate richer but still interpretable text models
-- add district-level scenario simulation in a stable way
+- extend the current scenario simulator with district-level shock presets
 - build a repeatable Claude-to-local experimentation template for feature engineering
 
 ### 28. Conclusion
