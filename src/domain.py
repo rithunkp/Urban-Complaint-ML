@@ -120,9 +120,10 @@ KERALA_REQUEST_LIBRARY = (
         base_weight=20.0,
         location_types=("Main Road", "Junction", "Bus Route"),
         descriptor_templates=(
-            "Large potholes reported on {landmark} near {district}.",
-            "Road surface broken after heavy rain at {landmark}, {district}.",
-            "Damaged carriageway causing traffic slowdown near {landmark} in {district}.",
+            "Pothole on street near {landmark}, {district}.",
+            "Rough, pitted or cracked roads after heavy rain at {landmark}, {district}.",
+            "Failed street repair causing traffic slowdown near {landmark} in {district}.",
+            "Cave-in on road surface reported at {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
@@ -132,8 +133,9 @@ KERALA_REQUEST_LIBRARY = (
         base_weight=10.0,
         location_types=("Footpath", "School Zone", "Market Area"),
         descriptor_templates=(
-            "Broken footpath slabs near {landmark} in {district}.",
-            "Unsafe walkway reported beside {landmark}, {district}.",
+            "Broken sidewalk slabs near {landmark} in {district}.",
+            "Sidewalk violation and unsafe walkway reported beside {landmark}, {district}.",
+            "Sidewalk collapsed along footpath near {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
@@ -143,19 +145,21 @@ KERALA_REQUEST_LIBRARY = (
         base_weight=8.0,
         location_types=("Hospital Entrance", "Junction", "Market Road"),
         descriptor_templates=(
-            "Vehicles parked illegally blocking access at {landmark}, {district}.",
-            "Improper roadside parking causing congestion near {landmark} in {district}.",
+            "Double parked blocking traffic at {landmark}, {district}.",
+            "Blocked sidewalk due to illegal parking near {landmark} in {district}.",
+            "Posted parking sign violation reported at {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
         localized_label="Drain Overflow",
-        expected_nyc_label="Sewer",
+        expected_nyc_label="UNSANITARY CONDITION",
         sector="drainage_flooding",
         base_weight=9.0,
         location_types=("Drainage Canal", "Residential Lane", "Market Area"),
         descriptor_templates=(
-            "Drain overflow reported near {landmark} in {district}.",
-            "Stormwater drain blocked and overflowing at {landmark}, {district}.",
+            "SEWAGE from blocked stormwater drain near {landmark} in {district}.",
+            "Unsanitary sewage overflow from open drain at {landmark}, {district}.",
+            "GARBAGE/RECYCLING STORAGE and drain overflow causing foul smell near {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
@@ -165,30 +169,34 @@ KERALA_REQUEST_LIBRARY = (
         base_weight=9.0,
         location_types=("Residential Area", "Municipal Ward", "Apartment Block"),
         descriptor_templates=(
-            "No water supply for two days near {landmark}, {district}.",
-            "Low pressure water complaint from {landmark} area in {district}.",
+            "No Water (WNW) for two days near {landmark}, {district}.",
+            "LOW WATER PRESSURE - WLWP complaint from {landmark} area in {district}.",
+            "Leak (Use Comments) (WA2) reported near {landmark}, {district}.",
+            "Dirty Water (WE) reported from municipal supply near {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
         localized_label="Waste Collection Delay",
-        expected_nyc_label="Missed Collection",
+        expected_nyc_label="UNSANITARY CONDITION",
         sector="waste_sanitation",
         base_weight=8.0,
         location_types=("Residential Colony", "Market Area", "Ward Office"),
         descriptor_templates=(
-            "Waste collection missed near {landmark} in {district}.",
-            "Garbage pickup delayed for several days at {landmark}, {district}.",
+            "GARBAGE/RECYCLING STORAGE because waste collection missed near {landmark} in {district}.",
+            "GARBAGE/RECYCLING STORAGE pickup delayed for several days at {landmark}, {district}.",
+            "PESTS around uncollected garbage near {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
         localized_label="Unsanitary Drain or Dump",
-        expected_nyc_label="Unsanitary Condition",
+        expected_nyc_label="UNSANITARY CONDITION",
         sector="waste_sanitation",
         base_weight=7.0,
         location_types=("Open Drain", "Market Area", "Roadside"),
         descriptor_templates=(
-            "Unsanitary open drain reported near {landmark} in {district}.",
-            "Garbage dumping causing foul smell at {landmark}, {district}.",
+            "GARBAGE/RECYCLING STORAGE dumped near {landmark} in {district}.",
+            "SEWAGE and foul smell from roadside dumping at {landmark}, {district}.",
+            "PESTS reported around garbage dumping near {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
@@ -198,19 +206,21 @@ KERALA_REQUEST_LIBRARY = (
         base_weight=7.0,
         location_types=("Residential Street", "Bus Stop", "Park Road"),
         descriptor_templates=(
-            "Streetlights not working near {landmark} in {district}.",
-            "Dark stretch reported because lamp posts failed at {landmark}, {district}.",
+            "Street Light Out near {landmark} in {district}.",
+            "Multiple Street Lights Out on dark stretch at {landmark}, {district}.",
+            "Lamppost damaged and lamp dim near {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
         localized_label="Traffic Signal Failure",
-        expected_nyc_label="Traffic Signal Condition",
+        expected_nyc_label="Street Light Condition",
         sector="traffic_signals",
         base_weight=6.0,
         location_types=("Major Junction", "Signalized Intersection", "Town Center"),
         descriptor_templates=(
-            "Traffic signal malfunction reported at {landmark}, {district}.",
-            "Signal lights out of service near {landmark} in {district}.",
+            "Street Light Out at traffic signal near {landmark}, {district}.",
+            "Multiple Street Lights Out at signalized intersection near {landmark} in {district}.",
+            "Fixture/Luminaire Out Of Position on signal light at {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
@@ -220,8 +230,9 @@ KERALA_REQUEST_LIBRARY = (
         base_weight=5.0,
         location_types=("Lane Entrance", "School Gate", "Hospital Access"),
         descriptor_templates=(
-            "Access road blocked by temporary obstruction at {landmark}, {district}.",
-            "Residents cannot enter property because approach road is blocked near {landmark}.",
+            "No Access to property because approach road is blocked near {landmark}, {district}.",
+            "Partial Access blocked at lane entrance near {landmark}, {district}.",
+            "No Access reported at hospital approach road near {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
@@ -231,8 +242,9 @@ KERALA_REQUEST_LIBRARY = (
         base_weight=5.0,
         location_types=("Residential Area", "Festival Ground", "Community Hall"),
         descriptor_templates=(
-            "Excessive loudspeaker noise reported near {landmark}, {district}.",
-            "Late-night residential noise complaint from {landmark} area in {district}.",
+            "Loud Music/Party noise reported near {landmark}, {district}.",
+            "Banging/Pounding late-night residential noise complaint from {landmark} area in {district}.",
+            "Loud Talking from residential building near {landmark}, {district}.",
         ),
     ),
     KeralaRequestTemplate(
@@ -242,8 +254,9 @@ KERALA_REQUEST_LIBRARY = (
         base_weight=4.0,
         location_types=("Roadside", "Bus Depot", "Market Street"),
         descriptor_templates=(
-            "Abandoned damaged vehicle reported near {landmark}, {district}.",
-            "Derelict vehicle blocking public space at {landmark}, {district}.",
+            "14 Derelict Vehicles style abandoned damaged vehicle reported near {landmark}, {district}.",
+            "Derelict Vehicles blocking public space at {landmark}, {district}.",
+            "Abandoned derelict vehicle on street near {landmark}, {district}.",
         ),
     ),
 )

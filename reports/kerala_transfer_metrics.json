@@ -1,9 +1,9 @@
 {
   "rows": 50000,
-  "reference_label_coverage": 0.7028,
-  "covered_reference_rows": 35140,
-  "uncovered_reference_rows": 14860,
-  "accuracy_against_reference": 0.35463858850313035,
-  "macro_f1_against_reference": 0.24022845424116596,
-  "top_3_accuracy_against_reference": 0.5527603870233352
+  "reference_label_coverage": 1.0,
+  "covered_reference_rows": 50000,
+  "uncovered_reference_rows": 0,
+  "accuracy_against_reference": 0.88878,
+  "macro_f1_against_reference": 0.7085457784189341,
+  "top_3_accuracy_against_reference": 0.961
 }

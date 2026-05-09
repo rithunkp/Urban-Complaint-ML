@@ -21,6 +21,7 @@ from src.analytics import (
     sector_distribution,
     write_filtered_download,
 )
+from src.benchmark import benchmark_delta, compute_benchmark
 from src.data_pipeline import load_processed_dataframe
 from src.domain import DOMAIN_KERALA, DOMAIN_NYC, localized_label_for_prediction
 from src.modeling import load_model_bundle, predict_request
@@ -28,6 +29,9 @@ from src.paths import ARTIFACTS_DIR, PROCESSED_DIR, REPORTS_DIR
 from src.resource_allocation import build_resource_explanation, compute_resource_split
 from src.ui_components import (
     APP_CSS,
+    build_benchmark_figure,
+    build_confidence_distribution,
+    build_district_accuracy_figure,
     build_distribution_figure,
     build_geo_figure,
     build_prediction_figure,
@@ -36,6 +40,7 @@ from src.ui_components import (
     build_sector_figure,
     build_timeline_figure,
     build_top_categories_figure,
+    build_transfer_confusion_matrix,
     hero_html,
     kpi_html,
 )
@@ -130,6 +135,32 @@ def transfer_summary_markdown(domain: str) -> str:
     )
 
 
+def metrics_comparison_table() -> pd.DataFrame:
+    """Return a compact metrics table comparing NYC and Kerala evaluation reports."""
+    assets = load_runtime_assets()
+    nyc = assets["nyc_metrics"]
+    kerala = assets["kerala_metrics"]
+    rows = [
+        {
+            "Evaluation": "NYC backbone",
+            "Rows": f"{nyc.get('test_rows', 0):,} test",
+            "Coverage": "100.0%",
+            "Accuracy": f"{nyc.get('accuracy', 0.0):.3f}",
+            "Macro F1": f"{nyc.get('macro_f1', 0.0):.3f}",
+            "Top-3 Accuracy": f"{nyc.get('top_3_accuracy', 0.0):.3f}",
+        },
+        {
+            "Evaluation": "Kerala transfer",
+            "Rows": f"{kerala.get('rows', 0):,}",
+            "Coverage": f"{kerala.get('reference_label_coverage', 0.0):.1%}",
+            "Accuracy": f"{kerala.get('accuracy_against_reference', 0.0):.3f}",
+            "Macro F1": f"{kerala.get('macro_f1_against_reference', 0.0):.3f}",
+            "Top-3 Accuracy": f"{kerala.get('top_3_accuracy_against_reference', 0.0):.3f}",
+        },
+    ]
+    return pd.DataFrame(rows)
+
+
 def update_dashboard(
     domain: str,
     start_date: str,
@@ -150,6 +181,7 @@ def update_dashboard(
     anomaly_events = build_anomaly_events(filtered, anomalies)
     sector_load = sector_distribution(filtered)
     allocation = compute_resource_split(filtered, anomalies)
+    benchmark = compute_benchmark(filtered, allocation)
     matrix = region_sector_matrix(filtered)
     insights = generate_insights(filtered, anomalies, domain)
     download_path = write_filtered_download(filtered, domain)
@@ -180,6 +212,12 @@ def update_dashboard(
         build_resource_explanation(allocation),
         explorer,
         download_path,
+        metrics_comparison_table(),
+        build_transfer_confusion_matrix(filtered),
+        build_confidence_distribution(filtered),
+        build_district_accuracy_figure(filtered),
+        build_benchmark_figure(benchmark),
+        benchmark_delta(benchmark),
     )
 
 
@@ -252,6 +290,17 @@ def build_app() -> gr.Blocks:
                         allocation_table = gr.Dataframe(interactive=False)
                         allocation_explanation = gr.Markdown(elem_classes=["section-note"])
 
+                    with gr.Tab("Diagnostics"):
+                        metrics_table = gr.Dataframe(label="Evaluation metrics", interactive=False)
+                        transfer_confusion_plot = gr.Plot()
+                        with gr.Row():
+                            confidence_plot = gr.Plot()
+                            district_accuracy_plot = gr.Plot()
+
+                    with gr.Tab("Benchmark"):
+                        benchmark_plot = gr.Plot()
+                        benchmark_table = gr.Dataframe(label="Allocation benchmark", interactive=False)
+
                     with gr.Tab("Prediction Demo"):
                         demo_descriptor = gr.Textbox(
                             label="Complaint description",
@@ -299,6 +348,12 @@ def build_app() -> gr.Blocks:
                 allocation_explanation,
                 explorer_table,
                 download_file,
+                metrics_table,
+                transfer_confusion_plot,
+                confidence_plot,
+                district_accuracy_plot,
+                benchmark_plot,
+                benchmark_table,
             ],
         )
 
@@ -327,6 +382,12 @@ def build_app() -> gr.Blocks:
                 allocation_explanation,
                 explorer_table,
                 download_file,
+                metrics_table,
+                transfer_confusion_plot,
+                confidence_plot,
+                district_accuracy_plot,
+                benchmark_plot,
+                benchmark_table,
             ],
         )
 

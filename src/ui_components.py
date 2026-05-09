@@ -315,6 +315,149 @@ def build_prediction_figure(predictions: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def build_benchmark_figure(benchmark: pd.DataFrame) -> go.Figure:
+    """Create a grouped bar chart comparing allocation strategies."""
+    required = {"sector_display", "Equal Split", "Count-Only", "Model (4-Factor)"}
+    if benchmark.empty or not required.issubset(benchmark.columns):
+        return empty_figure("Allocation Benchmark", "No benchmark data is available for the current filter set.")
+
+    strategies = ["Equal Split", "Count-Only", "Model (4-Factor)"]
+    colors = {
+        "Equal Split": "#667785",
+        "Count-Only": "#f2c14e",
+        "Model (4-Factor)": "#0b4f6c",
+    }
+    fig = go.Figure()
+    for strategy in strategies:
+        fig.add_trace(
+            go.Bar(
+                name=strategy,
+                x=benchmark["sector_display"],
+                y=benchmark[strategy],
+                marker_color=colors[strategy],
+                text=benchmark[strategy].map(lambda value: f"{value:.1f}%"),
+                textposition="outside",
+            )
+        )
+
+    max_value = float(benchmark[strategies].max().max())
+    fig.update_layout(
+        barmode="group",
+        height=460,
+        title="Allocation Benchmark",
+        xaxis_title="",
+        yaxis_title="Allocation percent",
+        yaxis=dict(range=[0, max(20.0, max_value * 1.2)]),
+        legend_title="Strategy",
+        **PLOT_LAYOUT,
+    )
+    return fig
+
+
+def build_transfer_confusion_matrix(frame: pd.DataFrame) -> go.Figure:
+    """Create a row-normalized expected-vs-predicted transfer heatmap."""
+    required = {"expected_nyc_label", "predicted_nyc_label"}
+    if frame.empty or not required.issubset(frame.columns):
+        return empty_figure("Kerala Transfer Confusion Matrix", "Kerala prediction columns are not available.")
+
+    subset = frame.dropna(subset=["expected_nyc_label", "predicted_nyc_label"])
+    if subset.empty:
+        return empty_figure("Kerala Transfer Confusion Matrix", "No Kerala transfer rows are available.")
+
+    labels = sorted(set(subset["expected_nyc_label"].astype(str)) | set(subset["predicted_nyc_label"].astype(str)))
+    matrix = pd.crosstab(
+        subset["expected_nyc_label"].astype(str),
+        subset["predicted_nyc_label"].astype(str),
+        normalize="index",
+    ).reindex(index=labels, columns=labels, fill_value=0.0)
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=matrix.to_numpy(),
+            x=matrix.columns,
+            y=matrix.index,
+            colorscale=[[0.0, "#fff4e6"], [0.5, "#f2c14e"], [1.0, "#0b4f6c"]],
+            colorbar=dict(title="Share"),
+            hovertemplate="Expected: %{y}<br>Predicted: %{x}<br>Share: %{z:.2f}<extra></extra>",
+        )
+    )
+    fig.update_layout(
+        height=560,
+        title="Kerala Transfer Confusion Matrix",
+        xaxis_title="Predicted NYC label",
+        yaxis_title="Expected NYC label",
+        xaxis_tickangle=35,
+        **PLOT_LAYOUT,
+    )
+    return fig
+
+
+def build_confidence_distribution(frame: pd.DataFrame) -> go.Figure:
+    """Create confidence histograms for correct and incorrect transfer predictions."""
+    required = {"prediction_confidence", "correct_reference"}
+    if frame.empty or not required.issubset(frame.columns):
+        return empty_figure("Prediction Confidence Distribution", "Kerala confidence columns are not available.")
+
+    subset = frame.dropna(subset=["prediction_confidence", "correct_reference"])
+    if subset.empty:
+        return empty_figure("Prediction Confidence Distribution", "No confidence rows are available.")
+
+    correct = subset[subset["correct_reference"] == True]["prediction_confidence"]
+    incorrect = subset[subset["correct_reference"] == False]["prediction_confidence"]
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(x=correct, name="Correct", nbinsx=30, opacity=0.72, marker_color="#2a9d8f"))
+    fig.add_trace(go.Histogram(x=incorrect, name="Incorrect", nbinsx=30, opacity=0.72, marker_color="#bc4749"))
+    fig.add_vline(x=0.8, line_dash="dash", line_color="#667785")
+    fig.update_layout(
+        barmode="overlay",
+        height=420,
+        title="Prediction Confidence Distribution",
+        xaxis_title="Top prediction confidence",
+        yaxis_title="Rows",
+        **PLOT_LAYOUT,
+    )
+    return fig
+
+
+def build_district_accuracy_figure(frame: pd.DataFrame) -> go.Figure:
+    """Create a district-level Kerala transfer accuracy chart."""
+    required = {"city_or_district", "correct_reference"}
+    if frame.empty or not required.issubset(frame.columns):
+        return empty_figure("District Transfer Accuracy", "Kerala district accuracy columns are not available.")
+
+    subset = frame.dropna(subset=["city_or_district", "correct_reference"])
+    if subset.empty:
+        return empty_figure("District Transfer Accuracy", "No district-level transfer rows are available.")
+
+    accuracy = (
+        subset.groupby("city_or_district")["correct_reference"]
+        .agg(accuracy="mean", rows="count")
+        .reset_index()
+        .rename(columns={"city_or_district": "district"})
+        .sort_values("accuracy", ascending=True)
+    )
+    fig = px.bar(
+        accuracy,
+        x="accuracy",
+        y="district",
+        orientation="h",
+        color="accuracy",
+        color_continuous_scale=["#bc4749", "#f2c14e", "#2a9d8f"],
+        range_color=[0.0, 1.0],
+        hover_data={"rows": True, "accuracy": ":.3f"},
+        title="District Transfer Accuracy",
+    )
+    fig.update_layout(
+        height=520,
+        xaxis_title="Accuracy",
+        xaxis_tickformat=".0%",
+        yaxis_title="",
+        coloraxis_showscale=False,
+        **PLOT_LAYOUT,
+    )
+    return fig
+
+
 def empty_figure(title: str, message: str) -> go.Figure:
     """Return a placeholder figure with a centered message."""
     fig = go.Figure()
